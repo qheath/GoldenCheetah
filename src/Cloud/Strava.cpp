@@ -393,15 +393,31 @@ Strava::writeFile(QByteArray &data, QString remotename, RideFile *ride)
     externalIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"external_id\""));
     externalIdPart.setBody(filename.toStdString().c_str());
 
-    //XXXQHttpPart privatePart;
-    //XXXprivatePart.setHeader(QNetworkRequest::ContentDispositionHeader,
-    //XXX                      QVariant("form-data; name=\"private\""));
-    //XXXprivatePart.setBody(parent->privateChk->isChecked() ? "1" : "0");
+    QHttpPart privatePart;
+    privatePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                          QVariant("form-data; name=\"private\""));
+    privatePart.setBody(ride->isSwim() ? "1" : "0");
 
-    //XXXQHttpPart commutePart;
-    //XXXcommutePart.setHeader(QNetworkRequest::ContentDispositionHeader,
-    //XXX                      QVariant("form-data; name=\"commute\""));
-    //XXXcommutePart.setBody(parent->commuteChk->isChecked() ? "1" : "0");
+    QStringList activityKeywords = ride->getTag("Keywords", "").split(' ');
+
+    QHttpPart workoutTypePart;
+    workoutTypePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                              QVariant("form-data; name=\"workout_type\""));
+    if (activityKeywords.contains("long")) {
+        workoutTypePart.setBody(ride->isRun() ? "2" : "10");
+    } else if (activityKeywords.contains("workout")) {
+        workoutTypePart.setBody(ride->isRun() ? "3" : "12");
+    } else if (activityKeywords.contains("race")) {
+        workoutTypePart.setBody(ride->isRun() ? "1" : "11");
+    } else {
+        workoutTypePart.setBody(ride->isRun() ? "0" : "10");
+    }
+
+    QHttpPart commutePart;
+    commutePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                          QVariant("form-data; name=\"commute\""));
+    commutePart.setBody(activityKeywords.contains("commute") ? "1" : "0");
+
     //XXXQHttpPart trainerPart;
     //XXXtrainerPart.setHeader(QNetworkRequest::ContentDispositionHeader,
     //XXX                      QVariant("form-data; name=\"trainer\""));
@@ -422,8 +438,9 @@ Strava::writeFile(QByteArray &data, QString remotename, RideFile *ride)
     }
     multiPart->append(dataTypePart);
     multiPart->append(externalIdPart);
-    //XXXmultiPart->append(privatePart);
-    //XXXmultiPart->append(commutePart);
+    multiPart->append(privatePart);
+    multiPart->append(workoutTypePart);
+    multiPart->append(commutePart);
     //XXXmultiPart->append(trainerPart);
     multiPart->append(filePart);
 
