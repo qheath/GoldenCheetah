@@ -347,6 +347,33 @@ Strava::writeFile(QByteArray &data, QString remotename, RideFile *ride)
     QString activityName = "";
     if (activityNameFieldname != "")
         activityName = ride->getTag(activityNameFieldname, "");
+    if (activityName.isEmpty()) {
+        // look everywhare for available information
+        // is "Workout Title" set?
+        QString workoutTitle = ride->getTag("Workout Title", "");
+        if (!workoutTitle.isEmpty()) {
+            activityName = workoutTitle;
+        } else {
+            // is "Workout Code" set?
+            QString workoutCode = ride->getTag("Workout Code", "");
+            QString route = ride->getTag("Route", "");
+            if (!workoutCode.isEmpty()) {
+                // is "Route" set?
+                if (!route.isEmpty()) {
+                    activityName = workoutCode + " (" + route + ")";
+                } else {
+                    activityName = workoutCode;
+                }
+            } else {
+                // is "Route" set?
+                if (!route.isEmpty()) {
+                    activityName = route;
+                } else {
+                    activityName = "";
+                }
+            }
+        }
+    }
     activityNamePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain;charset=utf-8"));
     activityNamePart.setBody(activityName.toUtf8());
 
