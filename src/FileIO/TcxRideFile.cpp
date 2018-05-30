@@ -52,6 +52,107 @@ RideFile *TcxFileReader::openRideFile(QFile &file, QStringList &errors, QList<Ri
     return rideFile;
 }
 
+// data points: timeoffset, dist, hr, spd, pwr, torq, cad, lat, lon, alt
+void addTrackPoint(const RideFile *ride, bool withAlt, bool withWatts, bool withHr, bool withCad, QDomDocument doc, QDomElement track, const RideFilePoint *point)
+{
+    QDomText text;
+
+    QDomElement trackpoint = doc.createElement("Trackpoint");
+    track.appendChild(trackpoint);
+
+    // time
+    QDomElement time = doc.createElement("Time");
+    text = doc.createTextNode(ride->startTime().toUTC().addSecs(point->secs).toString(Qt::ISODate));
+    time.appendChild(text);
+    trackpoint.appendChild(time);
+
+    // position
+    if (ride->areDataPresent()->lat && point->lat > -90.0 && point->lat < 90.0 && point->lat != 0.0 &&
+        ride->areDataPresent()->lon && point->lon > -180.00 && point->lon < 180.00 && point->lon != 0.0 ) {
+        QDomElement position = doc.createElement("Position");
+        trackpoint.appendChild(position);
+
+        // lat
+        QDomElement lat = doc.createElement("LatitudeDegrees");
+        text = doc.createTextNode(QString("%1").arg(point->lat, 0, 'g', 11));
+        lat.appendChild(text);
+        position.appendChild(lat);
+
+        // lon
+        QDomElement lon = doc.createElement("LongitudeDegrees");
+        text = doc.createTextNode(QString("%1").arg(point->lon, 0, 'g', 11));
+        lon.appendChild(text);
+        position.appendChild(lon);
+    }
+
+
+    // alt
+    if (withAlt && ride->areDataPresent()->alt && point->alt != 0.0) {
+        QDomElement alt = doc.createElement("AltitudeMeters");
+        text = doc.createTextNode(QString("%1").arg(point->alt));
+        alt.appendChild(text);
+        trackpoint.appendChild(alt);
+    }
+
+    // distance - meters
+    if (ride->areDataPresent()->km) {
+        QDomElement dist = doc.createElement("DistanceMeters");
+        text = doc.createTextNode(QString("%1").arg((point->km*1000)));
+        dist.appendChild(text);
+        trackpoint.appendChild(dist);
+    }
+
+    if (withHr && ride->areDataPresent()->hr)  {
+        // HeartRate hack for Garmin Training Center
+        // It needs an hr datapoint for every trackpoint or else the
+        // hr graph in TC won't display. Schema defines the datapoint
+        // as a positive int (> 0)
+
+        int tHr = 1;
+        if (ride->areDataPresent()->hr && point->hr >0.00) {
+            tHr = (int)point->hr;
+        }
+        QDomElement hr = doc.createElement("HeartRateBpm");
+        hr.setAttribute("xsi:type", "HeartRateInBeatsPerMinute_t");
+        QDomElement value = doc.createElement("Value");
+        text = doc.createTextNode(QString("%1").arg(tHr));
+        value.appendChild(text);
+        hr.appendChild(value);
+        trackpoint.appendChild(hr);
+    }
+
+    // cad
+    if (withCad && ride->areDataPresent()->cad && point->cad < 255) { //xsd maxInclusive value="254"
+        QDomElement cad = doc.createElement("Cadence");
+        text = doc.createTextNode(QString("%1").arg((int)(point->cad)));
+        cad.appendChild(text);
+        trackpoint.appendChild(cad);
+    }
+
+    if (ride->areDataPresent()->kph || ride->areDataPresent()->watts) {
+        QDomElement extension = doc.createElement("Extensions");
+        trackpoint.appendChild(extension);
+        QDomElement tpx = doc.createElement("TPX");
+        tpx.setAttribute("xmlns", "http://www.garmin.com/xmlschemas/ActivityExtension/v2");
+        extension.appendChild(tpx);
+
+        // spd - meters per second
+        if (ride->areDataPresent()->kph) {
+            QDomElement spd = doc.createElement("Speed");
+            text = doc.createTextNode(QString("%1").arg(point->kph / 3.6));
+            spd.appendChild(text);
+            tpx.appendChild(spd);
+        }
+        // pwr
+        if (withWatts && ride->areDataPresent()->watts) {
+            QDomElement pwr = doc.createElement("Watts");
+            text = doc.createTextNode(QString("%1").arg((int)point->watts));
+            pwr.appendChild(text);
+            tpx.appendChild(pwr);
+        }
+    }
+}
+
 QByteArray
 TcxFileReader::toByteArray(Context *context, const RideFile *ride, bool withAlt, bool withWatts, bool withHr, bool withCad) const
 {
@@ -216,106 +317,12 @@ TcxFileReader::toByteArray(Context *context, const RideFile *ride, bool withAlt,
     }
 
     // samples
-    // data points: timeoffset, dist, hr, spd, pwr, torq, cad, lat, lon, alt
     if (!ride->dataPoints().empty()) {
         QDomElement track = doc.createElement("Track");
         lap.appendChild(track);
 
         foreach (const RideFilePoint *point, ride->dataPoints()) {
-            QDomElement trackpoint = doc.createElement("Trackpoint");
-            track.appendChild(trackpoint);
-
-            // time
-            QDomElement time = doc.createElement("Time");
-            text = doc.createTextNode(ride->startTime().toUTC().addSecs(point->secs).toString(Qt::ISODate));
-            time.appendChild(text);
-            trackpoint.appendChild(time);
-
-            // position
-            if (ride->areDataPresent()->lat && point->lat > -90.0 && point->lat < 90.0 && point->lat != 0.0 &&
-                ride->areDataPresent()->lon && point->lon > -180.00 && point->lon < 180.00 && point->lon != 0.0 ) {
-                QDomElement position = doc.createElement("Position");
-                trackpoint.appendChild(position);
-
-                // lat
-                QDomElement lat = doc.createElement("LatitudeDegrees");
-                text = doc.createTextNode(QString("%1").arg(point->lat, 0, 'g', 11));
-                lat.appendChild(text);
-                position.appendChild(lat);
-
-                // lon
-                QDomElement lon = doc.createElement("LongitudeDegrees");
-                text = doc.createTextNode(QString("%1").arg(point->lon, 0, 'g', 11));
-                lon.appendChild(text);
-                position.appendChild(lon);
-            }
-
-
-            // alt
-            if (withAlt && ride->areDataPresent()->alt && point->alt != 0.0) {
-                QDomElement alt = doc.createElement("AltitudeMeters");
-                text = doc.createTextNode(QString("%1").arg(point->alt));
-                alt.appendChild(text);
-                trackpoint.appendChild(alt);
-            }
-
-            // distance - meters
-            if (ride->areDataPresent()->km) {
-                QDomElement dist = doc.createElement("DistanceMeters");
-                text = doc.createTextNode(QString("%1").arg((point->km*1000)));
-                dist.appendChild(text);
-                trackpoint.appendChild(dist);
-            }
-
-            if (withHr && ride->areDataPresent()->hr)  {
-                // HeartRate hack for Garmin Training Center
-                // It needs an hr datapoint for every trackpoint or else the
-                // hr graph in TC won't display. Schema defines the datapoint
-                // as a positive int (> 0)
-
-                int tHr = 1;
-                if (ride->areDataPresent()->hr && point->hr >0.00) {
-                    tHr = (int)point->hr;
-                }
-                QDomElement hr = doc.createElement("HeartRateBpm");
-                hr.setAttribute("xsi:type", "HeartRateInBeatsPerMinute_t");
-                QDomElement value = doc.createElement("Value");
-                text = doc.createTextNode(QString("%1").arg(tHr));
-                value.appendChild(text);
-                hr.appendChild(value);
-                trackpoint.appendChild(hr);
-            }
-
-            // cad
-            if (withCad && ride->areDataPresent()->cad && point->cad < 255) { //xsd maxInclusive value="254"
-                QDomElement cad = doc.createElement("Cadence");
-                text = doc.createTextNode(QString("%1").arg((int)(point->cad)));
-                cad.appendChild(text);
-                trackpoint.appendChild(cad);
-            }
-
-            if (ride->areDataPresent()->kph || ride->areDataPresent()->watts) {
-                QDomElement extension = doc.createElement("Extensions");
-                trackpoint.appendChild(extension);
-                QDomElement tpx = doc.createElement("TPX");
-                tpx.setAttribute("xmlns", "http://www.garmin.com/xmlschemas/ActivityExtension/v2");
-                extension.appendChild(tpx);
-
-                // spd - meters per second
-                if (ride->areDataPresent()->kph) {
-                    QDomElement spd = doc.createElement("Speed");
-                    text = doc.createTextNode(QString("%1").arg(point->kph / 3.6));
-                    spd.appendChild(text);
-                    tpx.appendChild(spd);
-                }
-                // pwr
-                if (withWatts && ride->areDataPresent()->watts) {
-                    QDomElement pwr = doc.createElement("Watts");
-                    text = doc.createTextNode(QString("%1").arg((int)point->watts));
-                    pwr.appendChild(text);
-                    tpx.appendChild(pwr);
-                }
-            }
+            addTrackPoint(ride, withAlt, withWatts, withHr, withCad, doc, track, point);
         }
     }
 
