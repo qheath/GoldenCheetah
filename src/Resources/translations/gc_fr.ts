@@ -7342,12 +7342,12 @@ Etes-vous sûr?</translation>
     <message>
         <location filename="../../Cloud/CloudDBVersion.cpp" line="163"/>
         <source>&lt;b&gt;&lt;big&gt;New versions of GoldenCheetah are available&lt;/big&gt;&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;&lt;big&gt;De nouvelles versions de GoldenCheetah sont disponibles&lt;/big&gt;&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudDBVersion.cpp" line="165"/>
         <source>&lt;b&gt;&lt;big&gt;A new version of GoldenCheetah is available&lt;/big&gt;&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;&lt;big&gt;Une nouvelle version de GoldenCheetah est disponible&lt;/big&gt;&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudDBVersion.cpp" line="183"/>
@@ -7367,16 +7367,16 @@ Etes-vous sûr?</translation>
     <message>
         <location filename="../../Cloud/CloudDBVersion.cpp" line="205"/>
         <source>Do not show again</source>
-        <translation type="unfinished"></translation>
+        <translation>Ne plus afficher</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudDBVersion.cpp" line="207"/>
         <source>Show again in %1 days</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher à nouveau dans %1 jours</translation>
     </message>
     <message>
         <source>Do not show these versions again</source>
-        <translation type="vanished">Ne plus afficher ces versions</translation>
+        <translation>Ne plus afficher ces versions</translation>
     </message>
     <message>
         <source>Show available versions again in %1 days</source>
@@ -7622,19 +7622,21 @@ Etes-vous sûr?</translation>
     <message>
         <location filename="../../Cloud/CloudService.cpp" line="907"/>
         <source>One of your activities has unsaved changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une de vos activités a des modifications non enregistrées.</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudService.cpp" line="909"/>
         <source>%1 of your activities have unsaved changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 de vos activités ont des modifications non enregistrées.</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudService.cpp" line="911"/>
-        <source>Changes in activities which are not saved, will not be synchronized. 
+        <source>Changes in activities which are not saved, will not be synchronized.
 
 This may lead to inconsistencies between your local GoldenCheetah activities and the uploaded activities. We recommend to save the changed activities before proceeding.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les modifications non enregistrées ne seront pas synchronisées.
+
+Cela va causer des incohérences entre les versions de vos activitées. Il est recommendé d&apos;enregistrer les activités d&apos;abord.</translation>
     </message>
     <message>
         <location filename="../../Cloud/CloudService.cpp" line="1024"/>
@@ -22033,7 +22035,7 @@ CP du cycliste fixée à %3 watts</translation>
     <message>
         <location filename="../../Metrics/BasicRideMetrics.cpp" line="2717"/>
         <source>Max Power Variance</source>
-        <translation>Ecart type de la puissance max</translation>
+        <translation>Écart-type de la puissance max</translation>
     </message>
     <message>
         <location filename="../../Metrics/BasicRideMetrics.cpp" line="2722"/>
@@ -37988,7 +37990,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="704"/>
         <source>Rest PNN50</source>
-        <translation type="unfinished"></translation>
+        <translation>PNN50 au repos</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="705"/>
@@ -37999,7 +38001,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="708"/>
         <source>Percentage of differences between adjacent NN intervals that are greater than 50 ms, measured at rest</source>
-        <translation type="unfinished"></translation>
+        <translation>Proportion d&apos;écarts entre internvalles NN successifs supérieurs à 50 ms au repos</translation>
     </message>
 </context>
 <context>
@@ -38007,18 +38009,18 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="667"/>
         <source>Rest rMSSD</source>
-        <translation type="unfinished"></translation>
+        <translation>rMSSD au repos</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="668"/>
         <location filename="../../Metrics/HrvMetrics.cpp" line="669"/>
         <source>msec</source>
-        <translation type="unfinished">msec</translation>
+        <translation>msec</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="671"/>
         <source>Square root of the mean of the squares of differences between adjacent NN intervals, measured at rest</source>
-        <translation type="unfinished"></translation>
+        <translation>Moyenne quadratique des différences entre intervalles NN successifs au repos</translation>
     </message>
 </context>
 <context>
@@ -38026,18 +38028,18 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="630"/>
         <source>Rest SDNN</source>
-        <translation type="unfinished"></translation>
+        <translation>SDNN au repos</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="631"/>
         <location filename="../../Metrics/HrvMetrics.cpp" line="632"/>
         <source>msec</source>
-        <translation type="unfinished">msec</translation>
+        <translation>msec</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="634"/>
         <source>Standard deviation of all NN intervals measured at rest</source>
-        <translation type="unfinished"></translation>
+        <translation>Écart-type des intervalles NN au repos</translation>
     </message>
 </context>
 <context>
@@ -38045,7 +38047,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="426"/>
         <source>rMSSD</source>
-        <translation>rMSSD (la moyenne quadratique des intervalles successifs)</translation>
+        <translation>rMSSD</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="427"/>
@@ -38056,7 +38058,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="430"/>
         <source>Square root of the mean of the squares of differences between adjacent NN intervals</source>
-        <translation>Racine carrée de la moyenne des carrés des différences entre les intervalles NN adjacents</translation>
+        <translation>Moyenne quadratique des différences entre intervalles NN successifs</translation>
     </message>
 </context>
 <context>
@@ -38075,7 +38077,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="254"/>
         <source>Standard deviation of all NN intervals in all 5-minute segments of a 24-hour recording</source>
-        <translation>Ecart type de tous les intervalles NN de tous les segments de 5 minutes d&apos;un enregistrement de 24 heures</translation>
+        <translation>Écart-type de tous les intervalles NN de tous les segments de 5 minutes d&apos;un enregistrement de 24 heures</translation>
     </message>
 </context>
 <context>
@@ -38083,7 +38085,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="172"/>
         <source>Standard deviation of NN</source>
-        <translation>Ecart-type de NN</translation>
+        <translation>Écart-type de NN</translation>
     </message>
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="173"/>
@@ -38094,7 +38096,7 @@ Vous pouvez supprimer des références lors de la gestion de la bibliothèque vi
     <message>
         <location filename="../../Metrics/HrvMetrics.cpp" line="176"/>
         <source>Standard deviation of all NN intervals</source>
-        <translation>Ecart-type de tous les intervalles NN</translation>
+        <translation>Écart-type de tous les intervalles NN</translation>
     </message>
 </context>
 <context>
