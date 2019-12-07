@@ -238,10 +238,6 @@ TcxFileReader::toByteArray(Context *context, const RideFile *ride, bool withAlt,
     creator.appendChild(version);
     activity.appendChild(creator);
 
-    QDomElement lap = doc.createElement("Lap");
-    lap.setAttribute("StartTime", ride->startTime().toUTC().toString(Qt::ISODate));
-    activity.appendChild(lap);
-
     const char *metrics[] = {
         "total_distance",
         "workout_time",
@@ -260,69 +256,110 @@ TcxFileReader::toByteArray(Context *context, const RideFile *ride, bool withAlt,
     QStringList worklist = QStringList();
     for (int i=0; metrics[i];i++) worklist << metrics[i];
 
-    if (context) { // can't do this standalone
-        RideItem *tempItem = new RideItem(const_cast<RideFile*>(ride), context);
-        QHash<QString,RideMetricPtr> computed = RideMetric::computeMetrics(tempItem, Specification(), worklist);
+    QList<RideFileInterval*> lapIntervals;
+    QString match = QString("^%1 \\d+").arg(tr("Lap"));
+    foreach (RideFileInterval *rideFileInterval, ride->intervals()) {
+        if (QRegExp(match).exactMatch(rideFileInterval->name))
+            lapIntervals.push_back(rideFileInterval);
+    }
+    /* XXX the list is assumed to be an ordered partition of the
+     * activity; if it isn't, some points will be removed */
 
-        QDomElement lap_time = doc.createElement("TotalTimeSeconds");
-        text = doc.createTextNode(QString("%1").arg(computed.value("workout_time")->value(true)));
-        //text = doc.createTextNode(ride->dataPoints().last()->secs);
-        lap_time.appendChild(text);
-        lap.appendChild(lap_time);
+    if (lapIntervals.size()>1) {
+        QVector<RideFilePoint*>::const_iterator dataPointIt = ride->dataPoints().begin(), dataPointEnd = ride->dataPoints().end();
+        foreach (RideFileInterval *lapInterval, lapIntervals) {
+            QDomElement lap = doc.createElement("Lap");
+            lap.setAttribute("StartTime", ride->startTime().addSecs(lapInterval->start).toUTC().toString(Qt::ISODate));
+            activity.appendChild(lap);
 
-        QDomElement lap_distance = doc.createElement("DistanceMeters");
-        text = doc.createTextNode(QString("%1").arg(1000*computed.value("total_distance")->value(true)));
-        //text = doc.createTextNode(ride->dataPoints().last()->km);
-        lap_distance.appendChild(text);
-        lap.appendChild(lap_distance);
+            QDomElement lap_time = doc.createElement("TotalTimeSeconds");
+            text = doc.createTextNode(QString("%1").arg(lapInterval->stop - lapInterval->start));
+            lap_time.appendChild(text);
+            lap.appendChild(lap_time);
 
-        QDomElement max_speed = doc.createElement("MaximumSpeed");
-        text = doc.createTextNode(QString("%1")
-            .arg(computed.value("max_speed")->value(true) / 3.6));
-        max_speed.appendChild(text);
-        lap.appendChild(max_speed);
+            QDomElement track = doc.createElement("Track");
+            lap.appendChild(track);
 
-        QDomElement lap_calories = doc.createElement("Calories");
-        text = doc.createTextNode(QString("%1").arg((int)computed.value("total_work")->value(true)));
-        lap_calories.appendChild(text);
-        lap.appendChild(lap_calories);
+            // skip points that come too soon
+            while ((dataPointIt != dataPointEnd) && ((*dataPointIt)->secs < lapInterval->start)) {
+                dataPointIt++;
+            }
 
-        // optional per XSD, so only generate them if the data is to be exported and is present
-        if (withHr && ride->areDataPresent()->hr)
-        {
-            QDomElement avg_heartrate = doc.createElement("AverageHeartRateBpm");
-            QDomElement value = doc.createElement("Value");
-            text = doc.createTextNode(QString("%1").arg((int)computed.value("average_hr")->value(true)));
-            value.appendChild(text);
-            avg_heartrate.appendChild(value);
-            lap.appendChild(avg_heartrate);
+            // take points that don't come too late
+            while ((dataPointIt != dataPointEnd) && ((*dataPointIt)->secs < lapInterval->stop)) {
+                addTrackPoint(ride, withAlt, withWatts, withHr, withCad, doc, track, *dataPointIt);
+                dataPointIt++;
+            }
+        }
+    } else {
+        QDomElement lap = doc.createElement("Lap");
+        lap.setAttribute("StartTime", ride->startTime().toUTC().toString(Qt::ISODate));
+        activity.appendChild(lap);
 
-            QDomElement max_heartrate = doc.createElement("MaximumHeartRateBpm");
-            value = doc.createElement("Value");
-            text = doc.createTextNode(QString("%1").arg((int)computed.value("max_heartrate")->value(true)));
-            value.appendChild(text);
-            max_heartrate.appendChild(value);
-            lap.appendChild(max_heartrate);
+        if (context) { // can't do this standalone
+            RideItem *tempItem = new RideItem(const_cast<RideFile*>(ride), context);
+            QHash<QString,RideMetricPtr> computed = RideMetric::computeMetrics(tempItem, Specification(), worklist);
+
+            QDomElement lap_time = doc.createElement("TotalTimeSeconds");
+            text = doc.createTextNode(QString("%1").arg(computed.value("workout_time")->value(true)));
+            //text = doc.createTextNode(ride->dataPoints().last()->secs);
+            lap_time.appendChild(text);
+            lap.appendChild(lap_time);
+
+            QDomElement lap_distance = doc.createElement("DistanceMeters");
+            text = doc.createTextNode(QString("%1").arg(1000*computed.value("total_distance")->value(true)));
+            //text = doc.createTextNode(ride->dataPoints().last()->km);
+            lap_distance.appendChild(text);
+            lap.appendChild(lap_distance);
+
+            QDomElement max_speed = doc.createElement("MaximumSpeed");
+            text = doc.createTextNode(QString("%1")
+                .arg(computed.value("max_speed")->value(true) / 3.6));
+            max_speed.appendChild(text);
+            lap.appendChild(max_speed);
+
+            QDomElement lap_calories = doc.createElement("Calories");
+            text = doc.createTextNode(QString("%1").arg((int)computed.value("total_work")->value(true)));
+            lap_calories.appendChild(text);
+            lap.appendChild(lap_calories);
+
+            // optional per XSD, so only generate them if the data is to be exported and is present
+            if (withHr && ride->areDataPresent()->hr)
+            {
+                QDomElement avg_heartrate = doc.createElement("AverageHeartRateBpm");
+                QDomElement value = doc.createElement("Value");
+                text = doc.createTextNode(QString("%1").arg((int)computed.value("average_hr")->value(true)));
+                value.appendChild(text);
+                avg_heartrate.appendChild(value);
+                lap.appendChild(avg_heartrate);
+
+                QDomElement max_heartrate = doc.createElement("MaximumHeartRateBpm");
+                value = doc.createElement("Value");
+                text = doc.createTextNode(QString("%1").arg((int)computed.value("max_heartrate")->value(true)));
+                value.appendChild(text);
+                max_heartrate.appendChild(value);
+                lap.appendChild(max_heartrate);
+            }
+
+            QDomElement lap_intensity = doc.createElement("Intensity");
+            text = doc.createTextNode("Active");
+            lap_intensity.appendChild(text);
+            lap.appendChild(lap_intensity);
+
+            QDomElement lap_triggerMethod = doc.createElement("TriggerMethod");
+            text = doc.createTextNode("Manual");
+            lap_triggerMethod.appendChild(text);
+            lap.appendChild(lap_triggerMethod);
         }
 
-        QDomElement lap_intensity = doc.createElement("Intensity");
-        text = doc.createTextNode("Active");
-        lap_intensity.appendChild(text);
-        lap.appendChild(lap_intensity);
+        // samples
+        if (!ride->dataPoints().empty()) {
+            QDomElement track = doc.createElement("Track");
+            lap.appendChild(track);
 
-        QDomElement lap_triggerMethod = doc.createElement("TriggerMethod");
-        text = doc.createTextNode("Manual");
-        lap_triggerMethod.appendChild(text);
-        lap.appendChild(lap_triggerMethod);
-    }
-
-    // samples
-    if (!ride->dataPoints().empty()) {
-        QDomElement track = doc.createElement("Track");
-        lap.appendChild(track);
-
-        foreach (const RideFilePoint *point, ride->dataPoints()) {
-            addTrackPoint(ride, withAlt, withWatts, withHr, withCad, doc, track, point);
+            foreach (const RideFilePoint *point, ride->dataPoints()) {
+                addTrackPoint(ride, withAlt, withWatts, withHr, withCad, doc, track, point);
+            }
         }
     }
 
